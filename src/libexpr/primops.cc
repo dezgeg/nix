@@ -551,9 +551,9 @@ static void prim_derivationStrict(EvalState & state, const Pos & pos, Value * * 
     StringSet outputs;
     outputs.insert("out");
 
-    for (auto & i : args[0]->attrs->lexicographicOrder()) {
-        if (i->name == state.sIgnoreNulls) continue;
-        string key = i->name;
+    for (auto & i : *args[0]->attrs) {
+        if (i.name == state.sIgnoreNulls) continue;
+        string key = i.name;
         vomit("processing attribute '%1%'", key);
 
         auto handleHashMode = [&](const std::string & s) {
@@ -583,16 +583,16 @@ static void prim_derivationStrict(EvalState & state, const Pos & pos, Value * * 
         try {
 
             if (ignoreNulls) {
-                state.forceValue(*i->value);
-                if (i->value->type == tNull) continue;
+                state.forceValue(*i.value);
+                if (i.value->type == tNull) continue;
             }
 
             /* The `args' attribute is special: it supplies the
                command-line arguments to the builder. */
             if (key == "args") {
-                state.forceList(*i->value, pos);
-                for (unsigned int n = 0; n < i->value->listSize(); ++n) {
-                    string s = state.coerceToString(posDrvName, *i->value->listElems()[n], context, true);
+                state.forceList(*i.value, pos);
+                for (unsigned int n = 0; n < i.value->listSize(); ++n) {
+                    string s = state.coerceToString(posDrvName, *i.value->listElems()[n], context, true);
                     drv.args.push_back(s);
                 }
             }
@@ -603,38 +603,38 @@ static void prim_derivationStrict(EvalState & state, const Pos & pos, Value * * 
 
                 if (jsonObject) {
 
-                    if (i->name == state.sStructuredAttrs) continue;
+                    if (i.name == state.sStructuredAttrs) continue;
 
                     auto placeholder(jsonObject->placeholder(key));
-                    printValueAsJSON(state, true, *i->value, placeholder, context);
+                    printValueAsJSON(state, true, *i.value, placeholder, context);
 
-                    if (i->name == state.sBuilder)
-                        drv.builder = state.forceString(*i->value, context, posDrvName);
-                    else if (i->name == state.sSystem)
-                        drv.platform = state.forceStringNoCtx(*i->value, posDrvName);
-                    else if (i->name == state.sName)
-                        drvName = state.forceStringNoCtx(*i->value, posDrvName);
+                    if (i.name == state.sBuilder)
+                        drv.builder = state.forceString(*i.value, context, posDrvName);
+                    else if (i.name == state.sSystem)
+                        drv.platform = state.forceStringNoCtx(*i.value, posDrvName);
+                    else if (i.name == state.sName)
+                        drvName = state.forceStringNoCtx(*i.value, posDrvName);
                     else if (key == "outputHash")
-                        outputHash = state.forceStringNoCtx(*i->value, posDrvName);
+                        outputHash = state.forceStringNoCtx(*i.value, posDrvName);
                     else if (key == "outputHashAlgo")
-                        outputHashAlgo = state.forceStringNoCtx(*i->value, posDrvName);
+                        outputHashAlgo = state.forceStringNoCtx(*i.value, posDrvName);
                     else if (key == "outputHashMode")
-                        handleHashMode(state.forceStringNoCtx(*i->value, posDrvName));
+                        handleHashMode(state.forceStringNoCtx(*i.value, posDrvName));
                     else if (key == "outputs") {
                         /* Require ‘outputs’ to be a list of strings. */
-                        state.forceList(*i->value, posDrvName);
+                        state.forceList(*i.value, posDrvName);
                         Strings ss;
-                        for (unsigned int n = 0; n < i->value->listSize(); ++n)
-                            ss.emplace_back(state.forceStringNoCtx(*i->value->listElems()[n], posDrvName));
+                        for (unsigned int n = 0; n < i.value->listSize(); ++n)
+                            ss.emplace_back(state.forceStringNoCtx(*i.value->listElems()[n], posDrvName));
                         handleOutputs(ss);
                     }
 
                 } else {
-                    auto s = state.coerceToString(posDrvName, *i->value, context, true);
+                    auto s = state.coerceToString(posDrvName, *i.value, context, true);
                     drv.env.emplace(key, s);
-                    if (i->name == state.sBuilder) drv.builder = s;
-                    else if (i->name == state.sSystem) drv.platform = s;
-                    else if (i->name == state.sName) {
+                    if (i.name == state.sBuilder) drv.builder = s;
+                    else if (i.name == state.sSystem) drv.platform = s;
+                    else if (i.name == state.sName) {
                         drvName = s;
                         printMsg(lvlVomit, format("derivation name is '%1%'") % drvName);
                     }
@@ -1138,8 +1138,8 @@ static void prim_attrNames(EvalState & state, const Pos & pos, Value * * args, V
     state.mkList(v, args[0]->attrs->size());
 
     size_t n = 0;
-    for (auto & i : args[0]->attrs->lexicographicOrder())
-        mkString(*(v.listElems()[n++] = state.allocValue()), i->name);
+    for (auto & i : *args[0]->attrs)
+        mkString(*(v.listElems()[n++] = state.allocValue()), i.name);
 }
 
 
