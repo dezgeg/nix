@@ -332,26 +332,21 @@ static void getDerivations(EvalState & state, Value & vIn,
            nix-env.cc. */
         bool combineChannels = v.attrs->find(state.symbols.create("_combineChannels")) != v.attrs->end();
 
-        /* Consider the attributes in sorted order to get more
-           deterministic behaviour in nix-env operations (e.g. when
-           there are names clashes between derivations, the derivation
-           bound to the attribute with the "lower" name should take
-           precedence). */
-        for (auto & i : v.attrs->lexicographicOrder()) {
-            debug("evaluating attribute '%1%'", i->name);
-            if (!std::regex_match(std::string(i->name), attrRegex))
+        for (auto & i : *v.attrs) {
+            debug("evaluating attribute '%1%'", i.name);
+            if (!std::regex_match(std::string(i.name), attrRegex))
                 continue;
-            string pathPrefix2 = addToPath(pathPrefix, i->name);
+            string pathPrefix2 = addToPath(pathPrefix, i.name);
             if (combineChannels)
-                getDerivations(state, *i->value, pathPrefix2, autoArgs, drvs, done, ignoreAssertionFailures);
-            else if (getDerivation(state, *i->value, pathPrefix2, drvs, done, ignoreAssertionFailures)) {
+                getDerivations(state, *i.value, pathPrefix2, autoArgs, drvs, done, ignoreAssertionFailures);
+            else if (getDerivation(state, *i.value, pathPrefix2, drvs, done, ignoreAssertionFailures)) {
                 /* If the value of this attribute is itself a set,
                    should we recurse into it?  => Only if it has a
                    `recurseForDerivations = true' attribute. */
-                if (i->value->type == tAttrs) {
-                    Bindings::iterator j = i->value->attrs->find(state.symbols.create("recurseForDerivations"));
-                    if (j != i->value->attrs->end() && state.forceBool(*j->value, *j->pos))
-                        getDerivations(state, *i->value, pathPrefix2, autoArgs, drvs, done, ignoreAssertionFailures);
+                if (i.value->type == tAttrs) {
+                    Bindings::iterator j = i.value->attrs->find(state.symbols.create("recurseForDerivations"));
+                    if (j != i.value->attrs->end() && state.forceBool(*j->value, *j->pos))
+                        getDerivations(state, *i.value, pathPrefix2, autoArgs, drvs, done, ignoreAssertionFailures);
                 }
             }
         }
