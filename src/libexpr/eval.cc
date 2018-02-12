@@ -91,9 +91,9 @@ static void printValue(std::ostream & str, std::set<const Value *> & active, con
         break;
     case tAttrs: {
         str << "{ ";
-        for (auto & i : v.attrs->lexicographicOrder()) {
-            str << i->name << " = ";
-            printValue(str, active, *i->value);
+        for (auto & i : *v.attrs) {
+            str << i.name << " = ";
+            printValue(str, active, *i.value);
             str << "; ";
         }
         str << "}";
