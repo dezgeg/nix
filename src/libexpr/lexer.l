@@ -70,7 +70,7 @@ static Expr * unescapeStr(SymbolTable & symbols, const char * s, size_t length)
         }
         else t += c;
     }
-    return new ExprString(symbols.create(t));
+    return new ExprString(symbols.create(std::move(t)));
 }
 
 
