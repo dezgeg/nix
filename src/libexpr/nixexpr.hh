@@ -204,8 +204,13 @@ protected:
 };
 
 struct ExprRecAttrs : ExprAttrs {
+    AttrDef * overridesAttrDef;
     COMMON_METHODS
-    ExprRecAttrs(const ExprAttrs & exprAttrs) : ExprAttrs(exprAttrs) {}
+    ExprRecAttrs(const ExprAttrs & exprAttrs, SymbolTable & symbolTable) : ExprAttrs(exprAttrs)
+    {
+        AttrDefs::iterator overrides = attrs.find(symbolTable.create("__overrides"));
+        this->overridesAttrDef = overrides == attrs.end() ? nullptr : &overrides->second;
+    }
 };
 
 struct ExprList : Expr

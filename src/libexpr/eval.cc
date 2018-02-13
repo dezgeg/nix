@@ -826,16 +826,13 @@ void ExprRecAttrs::eval(EvalState & state, Env & env, Value & v)
     Env & env2(state.allocEnv(attrs.size()));
     env2.up = &env;
 
-    AttrDefs::iterator overrides = attrs.find(state.sOverrides);
-    bool hasOverrides = overrides != attrs.end();
-
     /* The recursive attributes are evaluated in the new
        environment, while the inherited attributes are evaluated
        in the original environment. */
     unsigned int displ = 0;
     for (auto & i : attrs) {
         Value * vAttr;
-        if (hasOverrides && !i.second.inherited) {
+        if (overridesAttrDef && !i.second.inherited) {
             vAttr = state.allocValue();
             mkThunk(*vAttr, env2, i.second.e);
         } else
@@ -852,8 +849,8 @@ void ExprRecAttrs::eval(EvalState & state, Env & env, Value & v)
        still reference the original value, because that value has
        been substituted into the bodies of the other attributes.
        Hence we need __overrides.) */
-    if (hasOverrides) {
-        Value * vOverrides = (*v.attrs)[overrides->second.displ].value;
+    if (overridesAttrDef) {
+        Value * vOverrides = (*v.attrs)[overridesAttrDef->displ].value;
         state.forceAttrs(*vOverrides);
         Bindings * newBnds = state.allocBindings(v.attrs->size() + vOverrides->attrs->size());
         for (auto & i : *v.attrs)
