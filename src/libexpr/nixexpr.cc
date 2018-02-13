@@ -101,7 +101,6 @@ void ExprOpHasAttr::show(std::ostream & str)
 
 void ExprAttrs::show(std::ostream & str)
 {
-    if (recursive) str << "rec ";
     str << "{ ";
     for (auto & i : attrs)
         if (i.second.inherited)
@@ -111,6 +110,12 @@ void ExprAttrs::show(std::ostream & str)
     for (auto & i : dynamicAttrs)
         str << "\"${" << *i.nameExpr << "}\" = " << *i.valueExpr << "; ";
     str << "}";
+}
+
+void ExprRecAttrs::show(std::ostream & str)
+{
+    str << "rec ";
+    ExprAttrs::show(str);
 }
 
 void ExprList::show(std::ostream & str)
@@ -292,28 +297,32 @@ void ExprOpHasAttr::bindVars(const StaticEnv & env)
 
 void ExprAttrs::bindVars(const StaticEnv & env)
 {
-    const StaticEnv * dynamicEnv = &env;
+    for (auto & i : attrs)
+        i.second.e->bindVars(env);
+
+    bindDynamicVars(env);
+}
+
+void ExprAttrs::bindDynamicVars(const StaticEnv& dynamicEnv)
+{
+    for (auto & i : dynamicAttrs) {
+        i.nameExpr->bindVars(dynamicEnv);
+        i.valueExpr->bindVars(dynamicEnv);
+    }
+}
+
+void ExprRecAttrs::bindVars(const StaticEnv & env)
+{
     StaticEnv newEnv(false, &env);
 
-    if (recursive) {
-        dynamicEnv = &newEnv;
+    unsigned int displ = 0;
+    for (auto & i : attrs)
+        newEnv.vars[i.first] = i.second.displ = displ++;
 
-        unsigned int displ = 0;
-        for (auto & i : attrs)
-            newEnv.vars[i.first] = i.second.displ = displ++;
+    for (auto & i : attrs)
+        i.second.e->bindVars(i.second.inherited ? env : newEnv);
 
-        for (auto & i : attrs)
-            i.second.e->bindVars(i.second.inherited ? env : newEnv);
-    }
-
-    else
-        for (auto & i : attrs)
-            i.second.e->bindVars(env);
-
-    for (auto & i : dynamicAttrs) {
-        i.nameExpr->bindVars(*dynamicEnv);
-        i.valueExpr->bindVars(*dynamicEnv);
-    }
+    bindDynamicVars(newEnv);
 }
 
 void ExprList::bindVars(const StaticEnv & env)

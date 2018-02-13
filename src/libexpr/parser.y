@@ -389,9 +389,9 @@ expr_simple
   /* Let expressions `let {..., body = ...}' are just desugared
      into `(rec {..., body = ...}).body'. */
   | LET '{' binds '}'
-    { $3->recursive = true; $$ = new ExprSelect(noPos, $3, data->symbols.create("body")); }
+    { $$ = new ExprSelect(noPos, new ExprRecAttrs(*$3), data->symbols.create("body")); delete $3; }
   | REC '{' binds '}'
-    { $3->recursive = true; $$ = $3; }
+    { $$ = new ExprRecAttrs(*$3); delete $3; }
   | '{' binds '}'
     { $$ = $2; }
   | '[' expr_list ']' { $$ = $2; }

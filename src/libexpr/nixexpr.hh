@@ -177,7 +177,6 @@ struct ExprOpHasAttr : Expr
 
 struct ExprAttrs : Expr
 {
-    bool recursive;
     struct AttrDef {
         bool inherited;
         Expr * e;
@@ -197,8 +196,16 @@ struct ExprAttrs : Expr
     };
     typedef std::vector<DynamicAttrDef> DynamicAttrDefs;
     DynamicAttrDefs dynamicAttrs;
-    ExprAttrs() : recursive(false) { };
     COMMON_METHODS
+
+protected:
+    void evalDynamicAttrs(EvalState& state, Env * dynamicEnv, Value & v);
+    void bindDynamicVars(const StaticEnv& dynamicEnv);
+};
+
+struct ExprRecAttrs : ExprAttrs {
+    COMMON_METHODS
+    ExprRecAttrs(const ExprAttrs & exprAttrs) : ExprAttrs(exprAttrs) {}
 };
 
 struct ExprList : Expr
