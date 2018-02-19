@@ -6,7 +6,7 @@
 
 namespace nix {
 
-thread_local ActivityId curActivity = 0;
+/* thread_local */ ActivityId curActivity = 0;
 
 Logger * logger = makeDefaultLogger();
 
