@@ -77,7 +77,7 @@ public:
     virtual void result(ActivityId act, ResultType type, const Fields & fields) { };
 };
 
-extern thread_local ActivityId curActivity;
+extern /* thread_local */ActivityId curActivity;
 
 struct Activity
 {
